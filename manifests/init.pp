@@ -26,4 +26,8 @@ class openshift(
     ensure => running,
   }
 
+  lokkit::services { 'openshift' :
+    services  => [ 'ssh', 'http', 'https' ],
+  }
+
 }
