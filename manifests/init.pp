@@ -22,7 +22,7 @@ class openshift(
   }
 
   # Required OpenShift services
-  service { [httpd, network, ntpd, sshd]:
+  service { [httpd, network, sshd]:
     ensure => running,
   }
 
