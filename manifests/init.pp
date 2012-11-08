@@ -1,6 +1,7 @@
 class openshift(
   $openshift_domain = 'openshift.local',
 ) {
+  include lokkit::clear
 
   class { ntp:
     ensure     => running,
