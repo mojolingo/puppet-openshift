@@ -21,4 +21,9 @@ class openshift(
     ensure => present,
   }
 
+  # Required OpenShift services
+  service { [httpd, network, ntpd, sshd]:
+    ensure => running,
+  }
+
 }
