@@ -30,4 +30,8 @@ class openshift(
     services  => [ 'ssh', 'http', 'https' ],
   }
 
+  selinux::boolean { [httpd_unified, httpd_can_network_connect, httpd_can_network_relay, httpd_run_stickshift, named_write_master_zones, allow_ypbind]:
+    ensure => on
+  }
+
 }
