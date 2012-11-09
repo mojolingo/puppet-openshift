@@ -15,6 +15,10 @@ class openshift::broker(
     unless => "[ -f /var/named/K${domain}*.private ]",
   }
 
+  file { "/etc/rndc.key":
+    owner => root, group => named, mode => 0640
+  }
+
   #
   # MCollective configuration
   #
