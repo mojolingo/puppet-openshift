@@ -65,12 +65,7 @@ class openshift::broker(
 
   file { "named key":
     path => "/var/named/${domain}.key",
-    content => "
-key ${domain} {
-  algorithm HMAC-MD5;
-  secret "${KEY}";
-};
-",
+    content => template("files/named.key.erb"),
     owner => named, group => named, mode => 0444,
     require => File["/var/named"],
   }
@@ -85,24 +80,7 @@ key ${domain} {
   #
   file { "/etc/mcollective/client.cfg":
     ensure => present,
-    content => "
-topicprefix = /topic/
-main_collective = mcollective
-collectives = mcollective
-libdir = /usr/libexec/mcollective
-logfile = /var/log/mcollective-client.log
-loglevel = debug
-
-# Plugins
-securityprovider = psk
-plugin.psk = unset
-
-connector = stomp
-plugin.stomp.host = localhost
-plugin.stomp.port = 61613
-plugin.stomp.user = mcollective
-plugin.stomp.password = ${password}
-",
+    content => template("files/mcollective-client.cfg.erb"),
     mode => 0444, owner => root, group => root,
   }
 
