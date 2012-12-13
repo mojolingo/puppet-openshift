@@ -1,6 +1,6 @@
 class openshift::broker(
-  $domain => 'openshift.local',
-  $password => 'marionnette',
+  $domain = 'openshift.local',
+  $password = 'marionnette'
 ) {
   package { [bind, bind-utils, mcollective-client, httpd, policycoreutils]:
     require => Yumrepo[openshift],
@@ -11,12 +11,13 @@ class openshift::broker(
   # Named configuration
   #
   exec { "generate named keys":
-    command => "dnssec-keygen -a HMAC-MD5 -b 512 -n USER -r /dev/urandom -K /var/named ${domain}",
-    unless => "[ -f /var/named/K${domain}*.private ]",
+    command => "/usr/sbin/dnssec-keygen -a HMAC-MD5 -b 512 -n USER -r /dev/urandom -K /var/named ${domain}",
+    unless => "/usr/bin/[ -f /var/named/K${domain}*.private ]",
+    require => Package["bind-utils"]
   }
 
   service { "named":
-    ensure => running
+    ensure => running,
     require => Exec["named restorecon"],
   }
 
@@ -30,14 +31,14 @@ class openshift::broker(
     ],
   }
 
+  exec { "create rndc.key":
+    command => "/usr/sbin/rndc-confgen -a -r /dev/urandom",
+    unless => "/usr/bin/[ -f /etc/rndc.key ]",
+  }
+
   file { "/etc/rndc.key":
     owner => root, group => named, mode => 0640,
     require => Exec["create rndc.key"],
-  }
-
-  exec { "create rndc.key":
-    command => "/usr/sbin/rndc-confgen -a -r /dev/urandom",
-    unless => "[ -f /etc/rndc.key ]",
   }
 
   file { "/var/named/forwarders.conf":
@@ -48,31 +49,33 @@ class openshift::broker(
   file { "/var/named":
     ensure => directory,
     owner => named, group => named, mode => 0755,
+    require => Package["bind"]
   }
 
   file { "/var/named/dynamic":
     ensure => directory,
-    owner => named, group => named, mode => 0755
+    owner => named, group => named, mode => 0755,
     require => File["/var/named"],
   }
 
   file { "dynamic zone":
     path => "/var/named/dynamic/${domain}.db",
-    content => template("files/dynamic-zone.db.erb"),
+    content => template("openshift/dynamic-zone.db.erb"),
     owner => named, group => named, mode => 0644,
     require => File["/var/named"],
   }
 
   file { "named key":
     path => "/var/named/${domain}.key",
-    content => template("files/named.key.erb"),
+    content => template("openshift/named.key.erb"),
     owner => named, group => named, mode => 0444,
     require => File["/var/named"],
   }
 
   file { "/etc/named.conf":
     owner => root, group => named, mode => 0644,
-    content => template("named.conf.erb"),
+    content => template("openshift/named.conf.erb"),
+    require => Package["bind"]
   }
 
   #
@@ -80,7 +83,7 @@ class openshift::broker(
   #
   file { "/etc/mcollective/client.cfg":
     ensure => present,
-    content => template("files/mcollective-client.cfg.erb"),
+    content => template("openshift/mcollective-client.cfg.erb"),
     mode => 0444, owner => root, group => root,
   }
 
@@ -97,4 +100,33 @@ class openshift::broker(
   selinux::boolean { [httpd_unified, httpd_can_network_connect, httpd_can_network_relay, httpd_run_stickshift, named_write_master_zones, allow_ypbind]:
     ensure => on
   }
+
+  define line($file, $line, $ensure = 'present') {
+      case $ensure {
+          default: { err ( "unknown ensure value ${ensure}" ) }
+          present: {
+              exec { "/bin/echo '${line}' >> '${file}'":
+                  unless => "/bin/grep '${line}' '${file}'"
+              }
+          }
+          absent: {
+              exec { "/usr/bin/perl -ni -e 'print unless /^\\Q${line}\\E\$/' '${file}'":
+                  onlyif => "/bin/grep '${line}' '${file}'"
+              }
+          }
+      }
+  }
+
+  file { "/etc/mongodb.conf": ensure => present, }
+
+  line { "mongodb_auth_val":
+    file => "/etc/mongodb.conf",
+    line => "auth = true",
+  }
+
+  line { "mongodb_smallfiles_val":
+    file => "/etc/mongodb.conf",
+    line => "smallfiles = true",
+  }
+
 }

@@ -41,9 +41,9 @@ controls {
 
 include "/etc/named.rfc1912.zones";
 
-include "<%= $domain %>.key";
+include "<%= domain %>.key";
 
-zone "<%= $domain %>" IN {
+zone "<%= domain %>" IN {
     type master;
     file "dynamic/<%= $domain %>.db";
     allow-update { key <%= $domain %> ; } ;
