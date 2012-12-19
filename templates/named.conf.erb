@@ -45,6 +45,6 @@ include "<%= domain %>.key";
 
 zone "<%= domain %>" IN {
     type master;
-    file "dynamic/<%= $domain %>.db";
-    allow-update { key <%= $domain %> ; } ;
+    file "dynamic/<%= domain %>.db";
+    allow-update { key <%= domain %> ; } ;
 };
