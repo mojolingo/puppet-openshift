@@ -231,5 +231,70 @@ class openshift::broker(
     ensure => present,
   }
 
+  file { "conf openshift_origin_broker_proxy.conf":
+    path => "/etc/httpd/conf.d/000000_openshift_origin_broker_proxy.conf",
+    content => template("openshift/openshift-origin-broker_proxy.conf.erb"),
+    owner => root, group => root, mode => 0644,
+    require => Package["openshift-origin-broker"]
+  }
+
+  file { "conf openshift-origin-auth-remote-user.conf":
+    path => "/var/www/openshift/broker/httpd/conf.d/openshift-origin-auth-remote-user.conf",
+    content => template("openshift/openshift-origin-auth-remote-user.conf.erb"),
+    owner => root, group => root, mode => 0644,
+    require => Package["openshift-origin-broker"]
+  }
+
+  file { "plugin openshift-origin-auth-remote-user.conf":
+    path => "/etc/openshift/plugins.d/openshift-origin-auth-remote-user.conf",
+    content => template("openshift/openshift-origin-auth-remote-user.conf.plugin.erb"),
+    owner => root, group => root, mode => 0644,
+    require => Package["rubygem-openshift-origin-auth-remote-user"]
+  }
+
+  file { "plugin openshift-origin-msg-broker-mcollective.conf":
+    path => "/etc/openshift/plugins.d/openshift-origin-msg-broker-mcollective.conf",
+    content => template("openshift/openshift-origin-msg-broker-mcollective.conf.erb"),
+    owner => root, group => root, mode => 0644,
+    require => Package["rubygem-openshift-origin-msg-broker-mcollective"]
+  }
+
+  file { "plugin openshift-origin-dns-bind.conf.erb":
+    path => "/etc/openshift/plugins.d/openshift-origin-dns-bind.conf.erb",
+    content => template("openshift/openshift-origin-dns-bind.conf.erb"),
+    owner => root, group => root, mode => 0644,
+    require => Package["rubygem-openshift-origin-dns-bind"]
+  }
+
+  file { "openshift htpasswd":
+    path => "/etc/openshift/htpasswd",
+    content => template("openshift/openshift-htpasswd.erb"),
+    owner => root, group => root, mode => 0644,
+    require => Package["rubygem-openshift-origin-auth-remote-user"]
+  }
+
+  exec { "openshift ssl private key":
+    command => "/usr/bin/openssl genrsa -out /etc/openshift/server_priv.pem 2048",
+    unless => "/usr/bin/[ -f /etc/openshift/server_priv.pem ]",
+    require => Package["openshift-origin-broker"],
+  }
+
+  exec { "openshift ssl public key":
+    command => "/usr/bin/openssl rsa -in /etc/openshift/server_priv.pem -pubout > /etc/openshift/server_pub.pem",
+    unless => "/usr/bin/[ -f /etc/openshift/server_pub.pem ]",
+    require => Package["openshift-origin-broker"],
+  }
+
+  exec { "openshift create mongo user":
+    command => "/usr/bin/mongo openshift_broker_dev --eval 'db.addUser(\"openshift\", \"${password}\")'",
+    unless => "/bin/echo 'db.system.users.find()' | /usr/bin/mongo openshift_broker_dev | /bin/grep \"\\\"user\\\" : \\\"openshift\\\"\"",
+    require => Package["openshift-origin-broker"],
+  }
+
+  exec { "openshift create ssh keys":
+    command => "/usr/bin/ssh-keygen -t rsa -b 2048 -f /etc/openshift/rsync_id_rsa",
+    unless => "/usr/bin/[ -f /etc/openshift/rsync_id_rsa]",
+    require => Package["openshift-origin-broker"],
+  }
 
 }

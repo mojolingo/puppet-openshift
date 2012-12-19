@@ -1,0 +1,5 @@
+BIND_SERVER="127.0.0.1"
+BIND_PORT=53
+BIND_KEYNAME="<%= domain %>"
+BIND_KEYVALUE="<%= File.read(Dir.glob(keyfile)[0]).strip.slice(32,-1) %>"
+BIND_ZONE="<%= domain %>"
