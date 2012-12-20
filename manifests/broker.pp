@@ -34,6 +34,7 @@ class openshift::broker(
   service { "named":
     ensure => running,
     require => Exec["named restorecon"],
+    subscribe => File["/etc/named.conf"],
     enable => true,
   }
 
@@ -161,19 +162,18 @@ class openshift::broker(
     owner => root, group => root, mode => 0444,
   }
 
-# BROKEN NSUPDATE FAILS
-#  exec { "update zone data":
-#    command => "/usr/bin/nsupdate -v -k ${keyfile} <<EOF
-#server 127.0.0.1
-#update delete ${fqdn} A
-#update add ${fqdn} 180 A ${ipaddress}
-#show
-#send
-#quit
-#EOF",
-#    unless => "/usr/bin/[ ! -f /var/named/K${domain}*.private ]",
-#    require => Service["named"],
-#  }
+  exec { "update zone data":
+    command => "/usr/bin/nsupdate -v -k ${keyfile} <<EOF
+server 127.0.0.1
+update delete ${fqdn} A
+update add ${fqdn} 180 A ${ipaddress}
+show
+send
+quit
+EOF",
+    unless => "/usr/bin/[ ! -f /var/named/K${domain}*.private ]",
+    require => Service["named"],
+  }
 
   file { "resolv config":
     path => "/etc/resolv.conf",
@@ -196,24 +196,35 @@ class openshift::broker(
     require => Package["activemq"],
   }
 
+  file { "activemq init script":
+    path => "/etc/init.d/activemq",
+    content => template("openshift/activemq.init.erb"),
+    owner => root, group => root, mode => 0755,
+    require => Package["activemq"],
+  }
+
   file { "jetty.xml config":
     path => "/etc/activemq/jetty.xml",
     content => template("openshift/jetty.xml.erb"),
     owner => root, group => root, mode => 0444,
-    require => File["activemq.xml config"],
+    require => Package["activemq"],
   }
 
   file { "jetty-realm.properties config":
     path => "/etc/activemq/jetty-realm.properties",
     content => template("openshift/jetty-realm.properties.erb"),
     owner => root, group => root, mode => 0444,
-    require => File["jetty.xml config"],
+    require => Package["activemq"],
   }
 
 #BROKEN: ACTIVEMQ FAILS TO START PROPERLY
   service { "activemq":
     ensure => running,
-    require => File["jetty-realm.properties config"],
+    require => [File["activemq init script"],
+                File["activemq.xml config"],
+                File["jetty.xml config"],
+                File["jetty-realm.properties config"],
+               ],
     hasstatus => true,
     hasrestart => true,
     enable => true,
@@ -273,6 +284,13 @@ class openshift::broker(
     require => Package["rubygem-openshift-origin-auth-remote-user"]
   }
 
+  file { "openshift broker.conf":
+    path => "/etc/openshift/broker.conf",
+    content => template("openshift/openshift-broker.conf.erb"),
+    owner => apache, group => apache, mode => 0644,
+    require => Package["openshift-origin-broker"]
+  }
+
   exec { "openshift ssl private key":
     command => "/usr/bin/openssl genrsa -out /etc/openshift/server_priv.pem 2048",
     unless => "/usr/bin/[ -f /etc/openshift/server_priv.pem ]",
@@ -293,8 +311,35 @@ class openshift::broker(
 
   exec { "openshift create ssh keys":
     command => "/usr/bin/ssh-keygen -t rsa -b 2048 -f /etc/openshift/rsync_id_rsa",
-    unless => "/usr/bin/[ -f /etc/openshift/rsync_id_rsa]",
+    unless => "/usr/bin/[ -f /etc/openshift/rsync_id_rsa ]",
     require => Package["openshift-origin-broker"],
+  }
+
+  exec { "make openshift dns plugin policy":
+    command => "/usr/bin/make -f /usr/share/selinux/devel/Makefile",
+    cwd  => "/usr/share/selinux/packages/rubygem-openshift-origin-dns-bind",
+    unless => "/usr/bin/[ -f /usr/share/selinux/packages/rubygem-openshift-origin-dns-bind/dhcpnamedforward.pp ]",
+    require => File["plugin openshift-origin-dns-bind.conf.erb"],
+  }
+
+  exec { "enable openshift dns plugin policy":
+    command => "/usr/sbin/semodule -i /usr/share/selinux/packages/rubygem-openshift-origin-dns-bind/dhcpnamedforward.pp",
+    require => Exec["make openshift dns plugin policy"],
+  }
+
+  exec { "run openshift bundler":
+    command => "/usr/local/rvm/gems/ruby-1.9.3-p327@global/bin/bundle --local",
+    cwd  => "/var/www/openshift/broker",
+    unless => "/usr/bin/[ -f /usr/share/selinux/packages/rubygem-openshift-origin-dns-bind/dhcpnamedforward.pp ]",
+    require => Exec["enable openshift dns plugin policy"],
+  }
+
+  service { "openshift-broker":
+    ensure => running,
+    require => Exec["run openshift bundler"],
+    hasstatus => true,
+    hasrestart => true,
+    enable => true,
   }
 
 }

@@ -2,7 +2,6 @@ class openshift
 {
   include lokkit::clear
   include mongodb
-  include broker
 
   class { ntp:
     ensure     => running,
