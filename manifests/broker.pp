@@ -328,7 +328,7 @@ EOF",
   }
 
   exec { "run openshift bundler":
-    command => "/usr/local/rvm/gems/ruby-1.9.3-p327@global/bin/bundle --local",
+    command => "/usr/bin/bundle --local",
     cwd  => "/var/www/openshift/broker",
     unless => "/usr/bin/[ -f /usr/share/selinux/packages/rubygem-openshift-origin-dns-bind/dhcpnamedforward.pp ]",
     require => Exec["enable openshift dns plugin policy"],
