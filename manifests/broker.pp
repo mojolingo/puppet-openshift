@@ -177,7 +177,7 @@ EOF",
 
   file { "resolv config":
     path => "/etc/resolv.conf",
-    content => template("openshift/resolv.conf.erb"),
+    content => template("openshift/resolv.conf.broker.erb"),
     owner => root, group => root, mode => 0644,
     require => Service["named"],
   }

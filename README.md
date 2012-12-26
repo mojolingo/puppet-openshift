@@ -8,11 +8,21 @@ represented here has been taken from the [OpenShift Build-Your-Own PaaS instruct
 How To Use
 ==========
 
-An example node.pp:
+An example broker.pp:
 
 ```Puppet
 include openshift
 class { "openshift::broker":
+  domain => "example.com",
+  password => "badpassword",
+}
+```
+
+An example node.pp:
+
+```Puppet
+include openshift
+class { "openshift::node":
   domain => "example.com",
 }
 ```

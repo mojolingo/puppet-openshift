@@ -11,8 +11,8 @@ class openshift
     autoupdate => true,
   }
 
-  yumrepo { "openshift":
-    name => "openshift",
+  yumrepo { "openshift-infrastructure":
+    name => "openshift-infrastructure",
     baseurl => 'https://mirror.openshift.com/pub/origin-server/nightly/enterprise/2012-11-15/Infrastructure/x86_64/os/',
     enabled => 1,
     gpgcheck => 0,
