@@ -116,7 +116,7 @@ class openshift::node(
 
   #Install node cartridges
   package { ["openshift-origin-cartridge-diy-0.1",
-             "openshift-origin-cartridge-jenkins-1.4"]:
+             "openshift-origin-cartridge-jenkins-1.4",
              "openshift-origin-cartridge-python-2.6",
              "openshift-origin-cartridge-ruby-1.9-scl",
              "openshift-origin-cartridge-cron-1.4",
