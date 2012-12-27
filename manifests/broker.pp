@@ -1,6 +1,6 @@
 class openshift::broker(
   $domain = 'openshift.local',
-  $password = 'marionnette',
+  $password = 'marionette',
 ) {
 
   $keyfile = "/var/named/K${domain}*.key"
@@ -103,7 +103,7 @@ class openshift::broker(
   file { "/etc/mcollective/client.cfg":
     ensure => present,
     content => template("openshift/mcollective-client.cfg.erb"),
-    mode => 0444, owner => apache, group => root,
+    mode => 0644, owner => apache, group => root,
     require => Package["mcollective-client"],
   }
 

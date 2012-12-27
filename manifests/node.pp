@@ -1,7 +1,7 @@
 class openshift::node(
   $domain = 'openshift.local',
   $gateway = '',
-  $password = 'marionnette',
+  $password = 'marionette',
   $broker_rsync_key = '',
   $broker_ipaddress = '',
   $broker_fqdn = '',
