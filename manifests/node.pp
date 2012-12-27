@@ -186,28 +186,16 @@ class openshift::node(
     command => "/sbin/restorecon -rv /var/run /usr/share/rubygems/gems/passenger-* /usr/sbin/mcollectived /var/log/mcollective.log /var/run/mcollectived.pid /var/lib/openshift /etc/openshift/node.conf /etc/httpd/conf.d/openshift",
   }
 
-  line { "sysctl kernel.sem":
-    file => "/etc/sysctl.conf",
-    line => "kernel.sem = 250  32000 32  4096",
-  }
-
-  line { "sysctl ip_local_port_range":
-    file => "/etc/sysctl.conf",
-    line => "net.ipv4.ip_local_port_range = 15000 35530",
-  }
-
-  line { "sysctl nf_conntrack_max":
-    file => "/etc/sysctl.conf",
-    line => "net.netfilter.nf_conntrack_max = 1048576",
+  file { "sysctl config tweaks":
+    path => "/etc/sysctl.conf",
+    content => template("openshift/node-sysctl.conf.erb"),
+    ensure => present,
+    owner => root, group => root, mode => 0644,
   }
 
   exec { "reload sysctl":
     command => "/sbin/sysctl -p /etc/sysctl.conf",
-    require => [
-                Line["sysctl kernel.sem"],
-                Line["sysctl ip_local_port_range"],
-                Line["sysctl nf_conntrack_max"],
-               ]
+    require => File["sysctl config tweaks"],
   }
 
   file { "sshd config":
