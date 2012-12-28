@@ -54,19 +54,5 @@
   ProxyPassReverse /broker http://127.0.0.1:8080/broker
 </VirtualHost>
 
-<VirtualHost *:443>
-  ServerAdmin root@localhost
-  DocumentRoot /var/www/html
-  SSLEngine on
-  SSLProxyEngine on
-  SSLCertificateFile /etc/pki/tls/certs/localhost.crt
-  SSLCertificateKeyFile /etc/pki/tls/private/localhost.key
-  RequestHeader set X_FORWARDED_PROTO 'https'
-  RequestHeader set Front-End-Https "On"
-  ProxyTimeout 300
-  ProxyPass /broker http://127.0.0.1:8080/broker
-  ProxyPassReverse /broker http://127.0.0.1:8080/broker
-</VirtualHost>
-
 ProxyPreserveHost On
 RequestHeader unset X-Forwarded-For

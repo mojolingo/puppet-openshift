@@ -118,7 +118,7 @@ class openshift::broker(
   }
 
   lokkit::ports { 'openshift' :
-    tcpPorts  => [ '61613' ],
+    tcpPorts  => [ '61613', '8161' ],
   }
 
   selinux::boolean { [httpd_unified, httpd_can_network_connect, httpd_can_network_relay, httpd_run_stickshift, named_write_master_zones, allow_ypbind]:
@@ -162,18 +162,18 @@ class openshift::broker(
     owner => root, group => root, mode => 0444,
   }
 
-  exec { "update zone data":
-    command => "/usr/bin/nsupdate -v -k ${keyfile} <<EOF
-server 127.0.0.1
-update delete ${fqdn} A
-update add ${fqdn} 180 A ${ipaddress}
-show
-send
-quit
-EOF",
-    unless => "/usr/bin/[ ! -f /var/named/K${domain}*.private ]",
-    require => Service["named"],
-  }
+#  exec { "update zone data":
+#    command => "/usr/bin/nsupdate -v -k ${keyfile} <<EOF
+#server 127.0.0.1
+#update delete ${fqdn} A
+#update add ${fqdn} 180 A ${ipaddress}
+#show
+#send
+#quit
+#EOF",
+#    unless => "/usr/bin/[ ! -f /var/named/K${domain}*.private ]",
+#    require => Service["named"],
+#  }
 
   file { "resolv config":
     path => "/etc/resolv.conf",
@@ -270,8 +270,8 @@ EOF",
     require => Package["rubygem-openshift-origin-msg-broker-mcollective"]
   }
 
-  file { "plugin openshift-origin-dns-bind.conf.erb":
-    path => "/etc/openshift/plugins.d/openshift-origin-dns-bind.conf.erb",
+  file { "plugin openshift-origin-dns-bind.conf":
+    path => "/etc/openshift/plugins.d/openshift-origin-dns-bind.conf",
     content => template("openshift/openshift-origin-dns-bind.conf.erb"),
     owner => root, group => root, mode => 0644,
     require => Package["rubygem-openshift-origin-dns-bind"]
