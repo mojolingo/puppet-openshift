@@ -1,7 +1,7 @@
 name 'mojolingo-openshift'
 version '0.1.0'
 source 'git://github.com/mojolingo/puppet-openshift.git'
-author 'Ben Klang'
+author 'Mojo Lingo'
 license 'MIT'
 summary 'Module for installing RedHat Openshift'
 description 'Configures a node to participate in an OpenShift cluster'
