@@ -14,7 +14,7 @@ class openshift::broker(
   }
 
   package { [bind, bind-utils, mcollective-client, httpd, policycoreutils, "java-1.6.0-openjdk"]:
-    require => [Yumrepo[openshift],
+    require => [Yumrepo[openshift-infrastructure],
                 Package["tcl"],
                 Package["tk"],
                 Package["java-1.5.0-gcj"],
@@ -185,7 +185,7 @@ class openshift::broker(
   ##########
   # ActiveMQ
   package { activemq:
-    require => Yumrepo[openshift],
+    require => Yumrepo[openshift-infrastructure],
     ensure => present,
   }
 
@@ -235,7 +235,7 @@ class openshift::broker(
   package { [openshift-origin-broker, openshift-origin-broker-util,
              rubygem-openshift-origin-auth-remote-user, rubygem-openshift-origin-msg-broker-mcollective,
              rubygem-openshift-origin-dns-bind]:
-    require => [Yumrepo[openshift],
+    require => [Yumrepo[openshift-infrastructure],
                 Service["activemq"],
                 Service["named"],
                ],
@@ -319,7 +319,7 @@ class openshift::broker(
     command => "/usr/bin/make -f /usr/share/selinux/devel/Makefile",
     cwd  => "/usr/share/selinux/packages/rubygem-openshift-origin-dns-bind",
     unless => "/usr/bin/[ -f /usr/share/selinux/packages/rubygem-openshift-origin-dns-bind/dhcpnamedforward.pp ]",
-    require => File["plugin openshift-origin-dns-bind.conf.erb"],
+    require => File["plugin openshift-origin-dns-bind.conf"],
   }
 
   exec { "enable openshift dns plugin policy":
