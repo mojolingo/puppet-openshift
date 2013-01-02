@@ -39,7 +39,7 @@ class openshift::broker(
   }
 
   exec { "named restorecon":
-    command => "/sbin/restorecon -rv /etc/rndc.* /etc/named.* /var/named",
+    command => "/sbin/restorecon -rv /etc/rndc.* /etc/named.* /var/named /var/named/forwarders.conf",
     require => [
       File["/etc/rndc.key"],
       File["/var/named/forwarders.conf"],
@@ -288,6 +288,12 @@ class openshift::broker(
     path => "/etc/openshift/broker.conf",
     content => template("openshift/openshift-broker.conf.erb"),
     owner => apache, group => apache, mode => 0644,
+    require => Package["openshift-origin-broker"]
+  }
+
+  file { "openshift production log":
+    path => "/var/www/openshift/broker/log/production.log",
+    owner => root, group => aroot, mode => 0666,
     require => Package["openshift-origin-broker"]
   }
 
