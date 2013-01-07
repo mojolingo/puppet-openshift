@@ -211,7 +211,12 @@ class openshift::node(
     tcpPorts  => [ '35531-65535' ],
   }
 
-  service { "openshift-port-proxy, openshift-gears":
+  service { "openshift-port-proxy":
+    ensure => running,
+    enable => true,
+  }
+
+  service { "openshift-gears":
     ensure => running,
     enable => true,
   }
