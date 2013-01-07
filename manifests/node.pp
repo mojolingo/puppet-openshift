@@ -75,6 +75,12 @@ class openshift::node(
     enable => true,
   }
 
+  # Database Services
+  service { [postgresql, mysqld]:
+    ensure => running,
+    enable => true,
+  }
+
   file { "dhclient config":
     path => "/etc/dhcp/dhclient-eth0.conf",
     content => template("openshift/dhclient-eth0.conf.erb"),
