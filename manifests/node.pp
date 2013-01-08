@@ -128,6 +128,8 @@ class openshift::node(
              "openshift-origin-cartridge-cron-1.4",
              "openshift-origin-cartridge-jenkins-client-1.4",
              "openshift-origin-cartridge-mysql-5.1",
+             "openshift-origin-cartridge-ruby-1.8",
+             "openshift-origin-cartridge-haproxy-1.4",
              "openshift-origin-cartridge-postgresql-8.4"]:
     require => Yumrepo["openshift-node"],
     ensure => present,
