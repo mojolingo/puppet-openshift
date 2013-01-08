@@ -1,7 +1,10 @@
 class openshift
 {
   include lokkit::clear
-  include mongodb
+
+  class { mongodb:
+    enable_10gen => true,
+  }
 
   class { ntp:
     ensure     => running,
