@@ -73,6 +73,7 @@ class openshift::node(
   service { [httpd, network, sshd]:
     ensure => running,
     enable => true,
+    require => File["openshift node config"],
   }
 
   # Database Services
@@ -105,6 +106,7 @@ class openshift::node(
     content => template("openshift/mcollective-server.cfg.erb"),
     ensure => present,
     owner => root, group => root, mode => 0644,
+    require => Package["mcollective"],
   }
 
   service { "mcollective":
@@ -217,7 +219,12 @@ class openshift::node(
     tcpPorts  => [ '35531-65535' ],
   }
 
-  service { "openshift-port-proxy, openshift-gears":
+  service { "openshift-port-proxy":
+    ensure => running,
+    enable => true,
+  }
+
+  service { "openshift-gears":
     ensure => running,
     enable => true,
   }
@@ -232,7 +239,7 @@ class openshift::node(
 
   exec { "manually initialize openshift facts":
     command => "/etc/cron.minutely/openshift-facts",
-    require => File["openshift node config"],
+    require => Package["openshift-origin-msg-node-mcollective"],
   }
 
   file { "openshift node pam runuser":
